@@ -36,6 +36,77 @@ Make sure to get them with `$ git submodule update --init --recursive`
 Any of the standard generators(`makefile`, [`ninja`](https://ninja-build.org/))
 should be working fine, let us know if you see any issues.
 
+## Build (using OpenSSL instead of mbedTLS)
+The default TLS engine for this project is mbedTLS. It is possible, however, to use OpenSSL instead (see `BYFE` above). To build
+this project to use OpenSSL, follow these steps:
+* cd to root of checkout
+* `$ git submodule update --init --recursive`
+* `$ cd deps/openssl`
+* `$ ./config`
+* `$ make`
+* cd to root of checkout
+* `$ mkdir build`
+* `$ cd build`
+* `$ cmake -DENABLE_SAMPLES=ON -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=ON ..` <-- don't forget those two dots on the end
+* `$ make`
+
+You should now have a `libuv_mded.dylib` in your build directory.
+You should also have a `sample/engine_test` in your build directory as well. If you execute that program, you should see something resembling the following:
+
+        {16:10}~/ ✗ ➭ sample/engine_test
+        ip: 5.9.243.187
+        new_openssl_ctx() calling SSL_CTX_use_certificate_chain_file() with '/etc/ssl/cert.pem'
+        connected
+        handshake complete
+        writing req=123 bytes
+        HTTP/1.1 200 OK
+        Server: nginx/1.10.3
+        Date: Wed, 18 Dec 2019 21:13:07 GMT
+        Content-Type: text/plain; charset=utf-8
+        Content-Length: 8710
+        Connection: keep-alive
+
+        Weather report: Charlotte
+
+            \   /     Sunny
+            .-.      50 °F
+        ― (   ) ―   ↘ 0 mph
+            `-’      9 mi
+            /   \     0.0 in
+                                                            ┌─────────────┐
+        ┌──────────────────────────────┬───────────────────────┤  Wed 18 Dec ├───────────────────────┬──────────────────────────────┐
+        │            Morning           │             Noon      └──────┬──────┘     Evening           │             Night            │
+        ├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+        │     \   /     Sunny          │     \   /     Sunny          │     \   /     Clear          │     \   /     Clear          │
+        │      .-.      30..+35 °F     │      .-.      37..41 °F      │      .-.      39..44 °F      │      .-.      32..39 °F      │
+        │   ― (   ) ―   ← 5-8 mph      │   ― (   ) ―   ↘ 6-7 mph      │   ― (   ) ―   → 7-11 mph     │   ― (   ) ―   ↘ 7-13 mph     │
+        │      `-’      6 mi           │      `-’      6 mi           │      `-’      6 mi           │      `-’      6 mi           │
+        │     /   \     0.0 in | 0%    │     /   \     0.0 in | 0%    │     /   \     0.0 in | 0%    │     /   \     0.0 in | 0%    │
+        └──────────────────────────────┴──────────────────────────────┴──────────────────────────────┴──────────────────────────────┘
+                                                            ┌─────────────┐
+        ┌──────────────────────────────┬───────────────────────┤  Thu 19 Dec ├───────────────────────┬──────────────────────────────┐
+        │            Morning           │             Noon      └──────┬──────┘     Evening           │             Night            │
+        ├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+        │     \   /     Sunny          │     \   /     Sunny          │     \   /     Clear          │     \   /     Clear          │
+        │      .-.      33..37 °F      │      .-.      42..44 °F      │      .-.      48 °F          │      .-.      39..41 °F      │
+        │   ― (   ) ―   ↙ 3 mph        │   ― (   ) ―   ↙ 2-3 mph      │   ― (   ) ―   ↖ 2-3 mph      │   ― (   ) ―   ↑ 3 mph        │
+        │      `-’      6 mi           │      `-’      6 mi           │      `-’      6 mi           │      `-’      6 mi           │
+        │     /   \     0.0 in | 0%    │     /   \     0.0 in | 0%    │     /   \     0.0 in | 0%    │     /   \     0.0 in | 0%    │
+        └──────────────────────────────┴──────────────────────────────┴──────────────────────────────┴──────────────────────────────┘
+                                                            ┌─────────────┐
+        ┌──────────────────────────────┬───────────────────────┤  Fri 20 Dec ├───────────────────────┬──────────────────────────────┐
+        │            Morning           │             Noon      └──────┬──────┘     Evening           │             Night            │
+        ├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+        │    \  /       Partly cloudy  │               Overcast       │    \  /       Partly cloudy  │    \  /       Partly cloudy  │
+        │  _ /"".-.     37..39 °F      │      .--.     44 °F          │  _ /"".-.     46 °F          │  _ /"".-.     42 °F          │
+        │    \_(   ).   → 2-3 mph      │   .-(    ).   ↗ 2-3 mph      │    \_(   ).   ← 0-1 mph      │    \_(   ).   ↙ 0-1 mph      │
+        │    /(___(__)  6 mi           │  (___.__)__)  6 mi           │    /(___(__)  6 mi           │    /(___(__)  6 mi           │
+        │               0.0 in | 0%    │               0.0 in | 0%    │               0.0 in | 0%    │               0.0 in | 0%    │
+        └──────────────────────────────┴──────────────────────────────┴──────────────────────────────┴──────────────────────────────┘
+        Location: Charlotte, Mecklenburg County, North Carolina, United States of America [35.2270869,-80.8431267]
+
+
+
 #### Windows
 Building on windows:
 * ensure cmake is on your path
