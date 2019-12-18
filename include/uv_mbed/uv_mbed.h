@@ -23,7 +23,9 @@ limitations under the License.
 #include "tls_engine.h"
 
 typedef struct uv_mbed_s uv_mbed_t;
+#if !ENABLE_OPENSSL
 typedef struct bio BIO;
+#endif
 
 int uv_mbed_init(uv_loop_t *l, uv_mbed_t *mbed, tls_context *tls);
 int uv_mbed_keepalive(uv_mbed_t *mbed, int keepalive, unsigned int delay);

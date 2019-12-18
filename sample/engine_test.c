@@ -84,6 +84,13 @@ int main(int argc, char **argv) {
                    &opt, sizeof(opt))) {
         perror("setsockopt");
     }
+    struct timeval tv;
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv)) {
+        perror("setsockopt");
+    }
+
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = inet_addr(ip);
     address.sin_port = htons(443);
@@ -97,6 +104,10 @@ int main(int argc, char **argv) {
         printf("connected\n");
     }
 
+#if ENABLE_OPENSSL
+    tls_handshake_state state = engine->api->set_fd(engine->engine, sock);
+#endif    
+
     // do handshake
     char ssl_in[32 * 1024];
     char ssl_out[32 * 1024];
@@ -105,8 +116,7 @@ int main(int argc, char **argv) {
 
     int i = 0;
     do {
-        tls_handshake_state state = engine->api->handshake(engine->engine, ssl_in, in_bytes, ssl_out, &out_bytes,
-                                                           sizeof(ssl_out));
+        tls_handshake_state state = engine->api->handshake(engine->engine, ssl_in, in_bytes, ssl_out, &out_bytes, sizeof(ssl_out));
 
         if (state == TLS_HS_COMPLETE) {
             printf("handshake complete\n");
@@ -138,13 +148,16 @@ int main(int argc, char **argv) {
     engine->api->write(engine->engine, req, strlen(req), ssl_out, &out_bytes, sizeof(ssl_out));
     printf("writing req=%zd bytes\n", out_bytes);
 
+#if !ENABLE_OPENSSL
     send(sock, ssl_out, out_bytes, 0);
+#endif
 
     char resp[128];
     size_t resp_read = 0;
 
     int read_res = 0;
     do {
+#if !ENABLE_OPENSSL
         if (read_res == 0 || read_res == TLS_READ_AGAIN) {
             in_bytes = recv(sock, ssl_in, sizeof(ssl_in), 0);
             printf("read resp=%zd bytes\n", in_bytes);
@@ -152,13 +165,16 @@ int main(int argc, char **argv) {
         else {
             in_bytes = 0;
         }
+#endif
 
         read_res = engine->api->read(engine->engine, ssl_in, in_bytes, resp, &resp_read, sizeof(resp));
         printf("%*.*s", (int) resp_read, (int) resp_read, resp);
     } while (read_res == TLS_READ_AGAIN || read_res == TLS_MORE_AVAILABLE);
 
     engine->api->close(engine->engine, ssl_out, &out_bytes, sizeof(ssl_out));
+#if !ENABLE_OPENSSL
     send(sock, ssl_out, out_bytes, 0);
+#endif
 
     sockClose(sock);
 

@@ -5,3 +5,7 @@
 	path = deps/libuv
 	url = https://github.com/libuv/libuv.git
 	branch = v1.x
+[submodule "deps/openssl"]
+	path = deps/openssl
+	url = https://github.com/openssl/openssl
+	branch = OpenSSL_1_1_1-stable

@@ -35,12 +35,19 @@ enum TLS_RESULT {
 
 typedef struct {
 
+    /**
+     * Set the file descriptor for the i/o facility for the TLS. fd will typically be the socket file descriptor of a network connection.
+     * @param engine
+     * @param fd socker descriptor
+     */
+    int (*set_fd)(void *engine, int fd);
+
     tls_handshake_state (*handshake_state)(void *engine);
 
     /**
      * Initiates/continues TLS handshake.
      * @param engine
-     * @param in data received from TSL peer
+     * @param in data received from TLS peer
      * @param in_bytes number of bytes in inbound buffer
      * @param out data to be send to TLS peer
      * @param out_bytes number of bytes to be sent
@@ -50,7 +57,7 @@ typedef struct {
     (*handshake)(void *engine, char *in, size_t in_bytes, char *out, size_t *out_bytes, size_t maxout);
 
     /**
-     * Genereate TSL close notify.
+     * Genereate TLS close notify.
      * @param engine
      * @param out outbound buffer
      * @param out_bytes number of outbound bytes written
@@ -59,7 +66,7 @@ typedef struct {
     int (*close)(void *engine, char *out, size_t *out_bytes, size_t maxout);
 
     /**
-      * wraps application data into ssl stream format, out bound buffer contains bytes to be sent to TSL peer
+      * wraps application data into ssl stream format, out bound buffer contains bytes to be sent to TLS peer
       * @param engine
       * @param data
       * @param data_len
