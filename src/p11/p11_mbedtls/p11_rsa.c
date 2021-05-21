@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 #include <mbedtls/pk.h>
-#include <mbedtls/pk_internal.h>
+#include <mbedtls/error.h>
 #include "mbed_p11.h"
 #include <mbedtls/asn1write.h>
 #include <mbedtls/oid.h>
@@ -41,29 +41,6 @@ static void p11_rsa_free(void *ctx);
 
 static int get_md_prefix(mbedtls_md_type_t md, const char **prefix, size_t *len);
 
-const mbedtls_pk_info_t p11_rsa_info = {
-        MBEDTLS_PK_RSA,
-        "RSA",
-        p11_rsa_bitlen,
-        p11_rsa_can_do,
-        p11_rsa_verify,
-        p11_rsa_sign,
-#if defined(MBEDTLS_ECP_RESTARTABLE)
-rsa_verify_rs_wrap,
-rsa_sign_rs_wrap,
-#endif
-        NULL,
-        NULL,
-        NULL, //eckey_check_pair,   /* Compatible key structures */
-        NULL, //rsa_alloc_wrap,
-        p11_rsa_free,
-#if defined(MBEDTLS_ECP_RESTARTABLE)
-rsa_rs_alloc,
-rsa_rs_free,
-#endif
-        NULL, //eckey_debug,        /* Compatible key structures */
-};
-
 int p11_load_rsa(mbedtls_pk_context *pk, struct mp11_key_ctx_s *p11key, mp11_context *p11) {
     int rc;
     CK_BYTE ec_param[512];
@@ -73,7 +50,7 @@ int p11_load_rsa(mbedtls_pk_context *pk, struct mp11_key_ctx_s *p11key, mp11_con
             {CKA_MODULUS,         NULL, 0},
     };
 
-    pk->pk_info = &p11_rsa_info;
+    pk->pk_info = mbedtls_pk_info_from_type(MBEDTLS_PK_RSA);
     pk->pk_ctx = p11key;
     p11key->ctx = p11;
 
